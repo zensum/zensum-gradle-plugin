@@ -61,7 +61,6 @@ for ((k, _) in pluginProperties) {
 
 fun version(x: String) = versionProperties.getProperty(x)
 
-val gradleVersion = version("gradle")
 val jvmVersion = version("jvm")
 
 val kotlinVersion = version("kotlin")
@@ -73,7 +72,7 @@ val junitVersion = version("junit")
 
 tasks {
     withType<Wrapper> {
-        gradleVersion = gradleVersion
+        gradleVersion = version("gradle")
     }
 
     withType<KotlinCompile> {
