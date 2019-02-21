@@ -55,6 +55,28 @@ dependencies {
         "io.grpc:grpc-stub:${grpcVersion}")
 }
 
+// A bit weird stuff to configure Kotlin versions follows.
+//
+// The weirdness is in order to let the consumer use any version of
+// the Kotlin Gradle plugin.
+
+val kotlinPlugin =
+    plugins.findPlugin("org.jetbrains.kotlin.jvm")!!
+val kotlinVersion =
+    kotlinPlugin::class.java.getMethod("getKotlinPluginVersion").invoke(kotlinPlugin)
+
+// This task sets up dependencies with versions that can be configured
+// by the plugin consumer.
+val configureDependencies by tasks.registering() {
+    dependencies {
+        doLast {
+            "compile"("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+            "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${zensum.kotlin_coroutines_version}")
+            "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${zensum.kotlin_coroutines_version}")
+        }
+    }
+}
+
 val mainSourceSet = the<JavaPluginConvention>().sourceSets["main"]
 val mainClasspath = mainSourceSet.runtimeClasspath
 
@@ -74,8 +96,8 @@ task<JavaExec>("debug") {
 
 tasks {
     withType<JavaCompile> {
+        dependsOn(configureDependencies)
         doLast {
-            dependsOn(configureDependencies)
             sourceCompatibility = zensum.jvm_version
             targetCompatibility = zensum.jvm_version
             options.setIncremental(true)
@@ -121,29 +143,6 @@ tasks {
     artifacts {
         add("archives", sourcesJar)
         add("archives", javadocJar)
-    }
-}
-
-
-// A bit weird stuff to configure Kotlin versions follows.
-//
-// The weirdness is in order to let the consumer use any version of
-// the Kotlin Gradle plugin.
-
-val kotlinPlugin =
-    plugins.findPlugin("org.jetbrains.kotlin.jvm")!!
-val kotlinVersion =
-    kotlinPlugin::class.java.getMethod("getKotlinPluginVersion").invoke(kotlinPlugin)
-
-// This task sets up dependencies with versions that can be configured
-// by the plugin consumer.
-val configureDependencies by tasks.registering() {
-    dependencies {
-        doLast {
-            "compile"("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
-            "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${zensum.kotlin_coroutines_version}")
-            "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${zensum.kotlin_coroutines_version}")
-        }
     }
 }
 
