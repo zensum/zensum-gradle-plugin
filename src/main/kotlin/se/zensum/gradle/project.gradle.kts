@@ -6,6 +6,7 @@
 package se.zensum.gradle
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.google.cloud.tools.jib.gradle.JibExtension
 
 // Use built-in plugins.  External plugins are specified in the
 // resource file `plugins.properties`.
@@ -143,6 +144,17 @@ tasks {
     artifacts {
         add("archives", sourcesJar)
         add("archives", javadocJar)
+    }
+}
+
+configure<JibExtension> {
+    from {
+        image = "gcr.io/distroless/java@sha256:b2a1413a48ba78568126ed514416db0c92db4d1635ce78125d6f5932d9e1f813"
+    }
+    to {
+        val name = System.getenv("ZENS_NAME") ?: "unknown-repo"
+        val tag = System.getenv("TAG") ?: "dev"
+        image = "zensum/$name:$tag"
     }
 }
 
