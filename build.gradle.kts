@@ -1,3 +1,7 @@
+// This is the build configuration for the plugin.  For the Gradle
+// stuff that gets applied to the plugin's consumers, see
+// `project.gradle.kts`.
+
 import java.io.StringReader
 import java.util.Properties
 import groovy.text.SimpleTemplateEngine
@@ -56,6 +60,7 @@ dependencies {
         add("implementation", v)
     }
 
+    add("implementation", "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
 }
 
