@@ -5,14 +5,12 @@
 
 package se.zensum.gradle
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 // Use built-in plugins.  External plugins are specified in the
 // resource file `plugins.properties`.
 plugins {
     java
-    kotlin("jvm")
     maven
     idea
 }
@@ -75,26 +73,6 @@ task<JavaExec>("debug") {
 }
 
 tasks {
-    // This task sets up dependencies with versions that can be
-    // configured by the plugin consumer.
-    val configureDependencies by registering() {
-        dependencies {
-            doLast {
-                "compile"("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${zensum.kotlin_version}")
-                "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${zensum.kotlin_coroutines_version}")
-                "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${zensum.kotlin_coroutines_version}")
-            }
-        }
-    }
-
-    withType<KotlinCompile> {
-        dependsOn(configureDependencies)
-        kotlinOptions.languageVersion = zensum.kotlin_api_version
-        kotlinOptions.apiVersion = zensum.kotlin_api_version
-        kotlinOptions.jvmTarget = zensum.jvm_version
-        kotlinOptions.javaParameters = true
-    }
-
     withType<JavaCompile> {
         dependsOn(configureDependencies)
         sourceCompatibility = zensum.jvm_version
@@ -142,3 +120,59 @@ tasks {
     }
 }
 
+
+// A bit weird stuff to configure Kotlin versions follows.
+//
+// The weirdness is in order to let the consumer use any version of
+// the Kotlin Gradle plugin.
+
+val kotlinPlugin =
+    plugins.findPlugin("org.jetbrains.kotlin.jvm")!!
+val kotlinVersion =
+    kotlinPlugin::class.java.getMethod("getKotlinPluginVersion").invoke(kotlinPlugin)
+
+// This task sets up dependencies with versions that can be configured
+// by the plugin consumer.
+val configureDependencies by tasks.registering() {
+    dependencies {
+        doLast {
+            "compile"("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+            "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${zensum.kotlin_coroutines_version}")
+            "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${zensum.kotlin_coroutines_version}")
+        }
+    }
+}
+
+tasks.named("compileKotlin") {
+    dependsOn(configureDependencies)
+
+    // The problem is that we don't depend on the Kotlin plugin,
+    // because we let the plugin consumer choose their own version of
+    // that to use.
+    //
+    // So we can't refer to any of the types defined by that plugin.
+    // Luckily, we can use reflection to do it dynamically...
+
+    val kotlinOptions: Any = property("kotlinOptions")!!
+
+    fun setString(property: String, value: String) {
+        val setter = kotlinOptions::class.java.getMethod(
+            "set" + property.capitalize(),
+            value::class.java
+        )
+        setter.invoke(kotlinOptions, value)
+    }
+
+    fun setBool(property: String, value: Boolean) {
+        val setter = kotlinOptions::class.java.getMethod(
+            "set" + property.capitalize(),
+            value::class.java
+        )
+        setter.invoke(kotlinOptions, value)
+    }
+
+    setString("languageVersion", zensum.kotlin_api_version)
+    setString("apiVersion", zensum.kotlin_api_version)
+    setString("jvmTarget", zensum.jvm_version)
+    setBool("javaParameters", true)
+}

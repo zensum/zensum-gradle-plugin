@@ -44,13 +44,6 @@ tasks {
     withType<Wrapper> {
         gradleVersion = gradleVersion
     }
-
-    withType<KotlinCompile> {
-        kotlinOptions.languageVersion = kotlinVersion
-        kotlinOptions.apiVersion = kotlinApiVersion
-        kotlinOptions.jvmTarget = jvmVersion
-        kotlinOptions.javaParameters = true
-    }
 }
 
 dependencies {
@@ -60,7 +53,6 @@ dependencies {
         add("implementation", v)
     }
 
-    add("implementation", "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
 }
 

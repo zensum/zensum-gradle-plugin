@@ -11,18 +11,21 @@ val pluginProperties =
 
 fun version(x: String) = versionProperties.getProperty(x)
 
-val grpcVersion = version("grpc")
-val junitVersion = version("junit")
-
 // This is the configurable ``zensum { ... }'' block definition.
 open class ZensumProject {
-    var kotlin_version: String = version("kotlin")
     var jvm_version: String = version("jvm")
+
+    var kotlin_version: String = version("kotlin")
     var kotlin_api_version: String = version("kotlin_api")
     var kotlin_coroutines_version: String = version("kotlin_coroutines")
 
     var main_class: String = "se.zensum.MainKt"
 }
+
+val grpcVersion = version("grpc")
+val junitVersion = version("junit")
+
+
 
 // We only use this to get access to the resources via class loader.
 private class Foo {}
