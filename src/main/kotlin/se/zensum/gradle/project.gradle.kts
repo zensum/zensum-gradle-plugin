@@ -74,11 +74,13 @@ task<JavaExec>("debug") {
 
 tasks {
     withType<JavaCompile> {
-        dependsOn(configureDependencies)
-        sourceCompatibility = zensum.jvm_version
-        targetCompatibility = zensum.jvm_version
-        options.setIncremental(true)
-        options.encoding = "UTF-8"
+        doLast {
+            dependsOn(configureDependencies)
+            sourceCompatibility = zensum.jvm_version
+            targetCompatibility = zensum.jvm_version
+            options.setIncremental(true)
+            options.encoding = "UTF-8"
+        }
     }
 
     withType<Wrapper> {
@@ -90,8 +92,10 @@ tasks {
     }
 
     withType<Jar> {
-        manifest {
-            attributes("Main-Class" to zensum.main_class)
+        doLast {
+            manifest {
+                attributes("Main-Class" to zensum.main_class)
+            }
         }
     }
 
