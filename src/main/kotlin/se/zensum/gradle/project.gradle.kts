@@ -5,7 +5,6 @@
 
 package se.zensum.gradle
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.google.cloud.tools.jib.gradle.JibExtension
 
 // Use built-in plugins.  External plugins are specified in the
@@ -41,7 +40,7 @@ for ((k, _) in pluginProperties) {
 // versions; the configurable ones come later.
 dependencies {
     "compile"(
-        "io.github.microutils:kotlin-logging:1.6.20")
+        "io.github.microutils:kotlin-logging:${zensum.kotlin_logging_version}")
 
     "testCompile"(
         "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
@@ -122,19 +121,6 @@ tasks {
         }
     }
 
-    withType<ShadowJar> {
-        // These properties are deprecated for some reason?
-        baseName = "shadow"
-        classifier = null
-        version = null
-    }
-
-    val sourcesJar by registering(Jar::class) {
-        dependsOn("classes")
-        classifier = "sources"
-        from(mainSourceSet.allSource)
-    }
-
     val javadoc by existing(Javadoc::class)
     val javadocJar by registering(Jar::class) {
         dependsOn(javadoc)
@@ -142,14 +128,13 @@ tasks {
     }
 
     artifacts {
-        add("archives", sourcesJar)
         add("archives", javadocJar)
     }
 }
 
 configure<JibExtension> {
     from {
-        image = "gcr.io/distroless/java@sha256:b2a1413a48ba78568126ed514416db0c92db4d1635ce78125d6f5932d9e1f813"
+        image = "gradle:5.3.1-jdk11"
     }
     to {
         val name = System.getenv("ZENS_NAME") ?: "unknown-repo"

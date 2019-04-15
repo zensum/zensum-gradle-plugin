@@ -18,6 +18,7 @@ open class ZensumProject {
     var kotlin_version: String = version("kotlin")
     var kotlin_api_version: String = version("kotlin_api")
     var kotlin_coroutines_version: String = version("kotlin_coroutines")
+    var kotlin_logging_version: String = version("kotlin_logging")
 
     var main_class: String = "se.zensum.MainKt"
 }
