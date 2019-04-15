@@ -27,7 +27,6 @@ val grpcVersion = version("grpc")
 val junitVersion = version("junit")
 
 
-
 // We only use this to get access to the resources via class loader.
 private class Foo {}
 

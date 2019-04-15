@@ -112,35 +112,6 @@ tasks {
     withType<Test> {
         useJUnitPlatform()
     }
-
-    withType<Jar> {
-        doLast {
-            manifest {
-                attributes("Main-Class" to zensum.main_class)
-            }
-        }
-    }
-
-    val javadoc by existing(Javadoc::class)
-    val javadocJar by registering(Jar::class) {
-        dependsOn(javadoc)
-        from(javadoc.get().destinationDir)
-    }
-
-    artifacts {
-        add("archives", javadocJar)
-    }
-}
-
-configure<JibExtension> {
-    from {
-        image = "gradle:5.3.1-jdk11"
-    }
-    to {
-        val name = System.getenv("ZENS_NAME") ?: "unknown-repo"
-        val tag = System.getenv("TAG") ?: "dev"
-        image = "zensum/$name:$tag"
-    }
 }
 
 tasks.named("compileKotlin") {
@@ -175,4 +146,15 @@ tasks.named("compileKotlin") {
     setString("apiVersion", zensum.kotlin_api_version)
     setString("jvmTarget", zensum.jvm_version)
     setBool("javaParameters", true)
+}
+
+configure<JibExtension> {
+    from {
+        image = "gradle:5.3.1-jdk11"
+    }
+    to {
+        val name = System.getenv("ZENS_NAME") ?: "unknown-repo"
+        val tag = System.getenv("TAG") ?: "dev"
+        image = "zensum/$name:$tag"
+    }
 }

@@ -32,8 +32,8 @@ publishing {
     }
 }
 
-val versions = readProperties("versions.properties")
-val plugins = readProperties("plugins.properties", vars = versions)
+val versions = readProperties("src/main/resources/versions.properties")
+val plugins = readProperties("src/main/resources/plugins.properties", vars = versions)
 
 val gradleVersion = versions.getProperty("gradle")
 val kotlinVersion = versions.getProperty("kotlin")
