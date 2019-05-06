@@ -5,6 +5,7 @@
 
 package se.zensum.gradle
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.google.cloud.tools.jib.gradle.JibExtension
 
 // Use built-in plugins.  External plugins are specified in the
@@ -111,6 +112,38 @@ tasks {
 
     withType<Test> {
         useJUnitPlatform()
+    }
+
+    withType<Jar> {
+        doLast {
+            manifest {
+                attributes("Main-Class" to zensum.main_class)
+            }
+        }
+    }
+
+    withType<ShadowJar> {
+        // These properties are deprecated for some reason?
+        baseName = "shadow"
+        classifier = null
+        version = null
+    }
+
+    val sourcesJar by registering(Jar::class) {
+        dependsOn("classes")
+        classifier = "sources"
+        from(mainSourceSet.allSource)
+    }
+
+    val javadoc by existing(Javadoc::class)
+    val javadocJar by registering(Jar::class) {
+        dependsOn(javadoc)
+        from(javadoc.get().destinationDir)
+    }
+
+    artifacts {
+        add("archives", sourcesJar)
+        add("archives", javadocJar)
     }
 }
 
