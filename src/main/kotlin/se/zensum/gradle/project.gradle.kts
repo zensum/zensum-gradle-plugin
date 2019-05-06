@@ -29,20 +29,27 @@ repositories {
     }
 }
 
-// Make the plugin configurable via a ``zensum { ... }'' block.
+// Make the plugin configurable via a ``zensum { ... }`` block.
 val zensum = extensions.create<ZensumProject>("zensum")
 
-// Apply the plugins listed in `plugins.properties'.
+// Apply the plugins listed in `plugins.properties`.
 for ((k, _) in pluginProperties) {
     apply(plugin = k as String)
 }
 
+val kotlinPlugin =
+    plugins.findPlugin("org.jetbrains.kotlin.jvm")!!
+val kotlinVersion =
+    kotlinPlugin::class.java.getMethod("getKotlinPluginVersion").invoke(kotlinPlugin)
+
 // Add our standard dependencies that don't have configurable
 // versions; the configurable ones come later.
 dependencies {
-    "compile"(
-        "io.github.microutils:kotlin-logging:${zensum.kotlin_logging_version}")
-
+    "compile"("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+    "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${zensum.kotlin_coroutines_version}")
+    "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${zensum.kotlin_coroutines_version}")
+    "compile"("io.github.microutils:kotlin-logging:${zensum.kotlin_logging_version}")
+    
     "testCompile"(
         "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     "testRuntime"(
@@ -75,7 +82,6 @@ task<JavaExec>("debug") {
 
 tasks {
     withType<JavaCompile> {
-        dependsOn(configureDependencies)
         doLast {
             sourceCompatibility = zensum.jvm_version
             targetCompatibility = zensum.jvm_version
@@ -126,38 +132,7 @@ tasks {
 }
 
 
-// A bit weird stuff to configure Kotlin versions follows.
-//
-// The weirdness is in order to let the consumer use any version of
-// the Kotlin Gradle plugin.
-
-val kotlinPlugin =
-    plugins.findPlugin("org.jetbrains.kotlin.jvm")!!
-val kotlinVersion =
-    kotlinPlugin::class.java.getMethod("getKotlinPluginVersion").invoke(kotlinPlugin)
-
-// This task sets up dependencies with versions that can be configured
-// by the plugin consumer.
-val configureDependencies by tasks.registering() {
-    dependencies {
-        doLast {
-            "compile"("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
-            "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${zensum.kotlin_coroutines_version}")
-            "compile"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${zensum.kotlin_coroutines_version}")
-        }
-    }
-}
-
 tasks.named("compileKotlin") {
-    dependsOn(configureDependencies)
-
-    // The problem is that we don't depend on the Kotlin plugin,
-    // because we let the plugin consumer choose their own version of
-    // that to use.
-    //
-    // So we can't refer to any of the types defined by that plugin.
-    // Luckily, we can use reflection to do it dynamically...
-
     val kotlinOptions: Any = property("kotlinOptions")!!
 
     fun setString(property: String, value: String) {
